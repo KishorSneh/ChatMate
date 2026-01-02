@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChatMate - Chat</title>
+<style>
+/* ===== Global CSS (unchanged from your existing styles) ===== */
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+body{height:100vh;overflow:hidden;background:#f3f8ff;color:#0a192f;transition:background .5s ease,color .5s ease;}
+.app{display:grid;grid-template-columns:300px 1fr;height:100vh;}
+.sidebar{border-right:1px solid rgba(0,0,0,0.08);background:rgba(255,255,255,0.85);backdrop-filter:blur(8px);padding:16px;overflow:auto;display:flex;flex-direction:column;transition: background .5s ease, color .5s ease;}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.brand .logo{width:36px;height:36px;display:grid;place-items:center;border-radius:12px;background:#2563eb;color:#fff;font-weight:600;}
+.brand h1{font-size:18px;margin:0;letter-spacing:.2px;color:#0a192f;}
+.chip{display:inline-flex;align-items:center;gap:8px;background:rgba(37,99,235,0.1);color:#2563eb;padding:6px 10px;border-radius:10px;font-size:12px;}
+.section{margin-top:16px;}
+.section h3{font-size:12px;text-transform:uppercase;color:#6b7280;letter-spacing:.12em;margin:12px 8px;}
+.chat-history{margin-top:20px;flex:1;display:flex;flex-direction:column;gap:8px;}
+.chat-history .chat-btn{display:flex;justify-content:space-between;align-items:center;background:#e0f2fe;color:#0a192f;padding:10px;border:none;border-radius:10px;text-align:left;cursor:pointer;transition:0.3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.chat-history .chat-btn:hover{background:#bfdbfe;}
+.chat-history .delete-btn{background:none;border:none;color:#a00;font-size:14px;cursor:pointer;margin-left:8px;}
+.new-chat-btn{margin-top:10px;padding:10px;border:none;border-radius:10px;background:#2563eb;color:#fff;font-weight:600;cursor:pointer;transition:0.3s;}
+.new-chat-btn:hover{background:#1d4ed8;}
+.main{display:flex;flex-direction:column;height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#ffffff;box-shadow:0 2px 5px rgba(0,0,0,0.1);border-bottom:none;border-radius:0;transition: background .5s ease, color .5s ease;}
+.logout{border:none;background:#ef4444;color:#fff;padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:600;}
+.toggle-theme{border:none;background:#2a60c9;color:#fff;padding:8px 14px;border-radius:20px;cursor:pointer;font-weight:500;transition:0.3s;}
+.toggle-theme:hover{background:#1e3f91;}
+.chat{flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;}
+.bubble{max-width:70%;margin:10px;padding:14px;border-radius:16px;position:relative;animation:fadeIn .4s;}
+.bubble.user{align-self:flex-end;background:#dbeafe;color:#0a192f;}
+.bubble.assistant{align-self:flex-start;background:#e0f2fe;color:#0a192f;}
+.meta{font-size:11px;color:#6b7280;margin-bottom:5px;display:flex;align-items:center;gap:6px;}
+.avatar{width:32px;height:32px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);} }
+.typing{display:flex;gap:4px;align-items:center;}
+.dot{width:8px;height:8px;background:#2563eb;border-radius:50%;animation:blink 1.4s infinite;}
+.dot:nth-child(2){animation-delay:.2s;}
+.dot:nth-child(3){animation-delay:.4s;}
+@keyframes blink{0%,80%,100%{opacity:0.3;}40%{opacity:1;}}
+.composer{padding:12px 16px;border-top:1px solid rgba(0,0,0,0.08);background:rgba(255,255,255,0.85);}
+.composer .row{display:flex;gap:8px;}
+.composer input[type="text"]{flex:1;padding:14px;border-radius:14px;border:1px solid rgba(0,0,0,.1);}
+.composer input[type="file"]{padding:6px;}
+.iconbtn{padding:12px;border-radius:12px;cursor:pointer;border:none;}
+.send{background:#2563eb;color:#fff;font-weight:700;}
+.send:hover{background:#1d4ed8;}
+body.dark{background:#0a1a3f;color:#fff;}
+body.dark .bubble.assistant{background:rgba(60,80,120,0.8);color:#fff;}
+body.dark .bubble.user{background:rgba(37,99,235,0.3);color:#fff;}
+body.dark .chat-history .chat-btn{background:rgba(37,99,235,0.15);color:#fff;}
+body.dark .chat-history .chat-btn:hover{background:rgba(37,99,235,0.3);}
+body.dark .new-chat-btn{background:#1d4ed8;color:#fff;}
+body.dark .sidebar{background:rgba(20,30,50,0.9);}
+body.dark .brand h1, body.dark .chip, body.dark .section h3{color:#fff;}
+body.dark .topbar{background:#1a2935;color:#fff;}
+body.dark .composer{background:rgba(20,30,50,0.85);}
+body.dark input{background:#1a2935;color:#fff;border:1px solid rgba(255,255,255,.2);}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">CM</div>
+      <div><h1>ChatMate</h1><span class="chip">Active</span></div>
+    </div>
+    <div class="section">
+      <h3>Chat History</h3>
+      <div class="chat-history" id="chatHistory"></div>
+      <button class="new-chat-btn" onclick="startNewChat()">+ New Chat</button>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <span id="welcomeText">Welcome, {{ username }} 👋</span>
+      <div>
+        <button id="themeToggle" class="toggle-theme">🌙 Dark Mode</button>
+        <button onclick="location.href='/logout'" class="logout">Logout</button>
+      </div>
+    </div>
+    <div class="chat" id="chat"></div>
+    <div class="composer">
+      <div class="row">
+        <input type="text" id="userInput" placeholder="Type a message or a math expression...">
+        <input type="file" id="pdfInput" accept=".pdf">
+        <button class="iconbtn send" onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const chat = document.getElementById('chat');
+const chatHistory = document.getElementById('chatHistory');
+const pdfInput = document.getElementById('pdfInput');
+let currentChatId = Date.now();
+let chats = {};
+
+if(localStorage.getItem('chatHistoryData')){
+  chats = JSON.parse(localStorage.getItem('chatHistoryData'));
+  loadHistorySidebar();
+}
+
+function renderMessage(text, sender, confidence=null){
+  const bubble = document.createElement('div');
+  bubble.classList.add('bubble', sender);
+  let meta = sender==="user" ? `<span class="avatar">👤</span>You` : `<span class="avatar">🤖</span>ChatMate`;
+  if(confidence!==null && sender==='assistant'){
+    text += `<br><small style="color:#6b7280;">Confidence: ${(confidence*100).toFixed(1)}%</small>`;
+  }
+  bubble.innerHTML = `<div class="meta">${meta}</div><p>${text}</p>`;
+  chat.appendChild(bubble);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function addMessage(text, sender, confidence=null){
+  renderMessage(text, sender, confidence);
+  if(!chats[currentChatId]) chats[currentChatId] = {title:'', messages:[]};
+  if(!chats[currentChatId].title && sender==="user")
+    chats[currentChatId].title = text.length>20 ? text.slice(0,20)+"..." : text;
+  chats[currentChatId].messages.push({sender,text,confidence});
+  localStorage.setItem('chatHistoryData', JSON.stringify(chats));
+  loadHistorySidebar();
+}
+
+function loadHistorySidebar(){
+  chatHistory.innerHTML = "";
+  Object.keys(chats).forEach(id => {
+    const lastMsg = chats[id].messages.slice(-1)[0];
+    const confText = lastMsg && lastMsg.sender==='assistant' && lastMsg.confidence!==null ? ` (${(lastMsg.confidence*100).toFixed(1)}%)` : '';
+    const btn = document.createElement('button');
+    btn.className = "chat-btn";
+    btn.innerHTML = `<span>${chats[id].title || 'Chat '+id}${confText}</span>
+                     <button class="delete-btn" onclick="deleteChat('${id}',event)">🗑️</button>`;
+    btn.onclick = () => loadChat(id);
+    chatHistory.appendChild(btn);
+  });
+}
+
+function deleteChat(id,event){
+  event.stopPropagation();
+  delete chats[id];
+  localStorage.setItem('chatHistoryData', JSON.stringify(chats));
+  if(currentChatId==id) chat.innerHTML = "";
+  loadHistorySidebar();
+}
+
+function loadChat(id){
+  currentChatId = id;
+  chat.innerHTML = "";
+  if(chats[id]){
+    chats[id].messages.slice(-100).forEach(msg => renderMessage(msg.text,msg.sender,msg.confidence));
+  }
+}
+
+function startNewChat(){
+  currentChatId = Date.now();
+  chat.innerHTML = "";
+  loadHistorySidebar();
+}
+
+function showTyping(){
+  const typing = document.createElement('div');
+  typing.classList.add('bubble','assistant');
+  typing.id = "typing";
+  typing.innerHTML = `<div class="meta"><span class="avatar">🤖</span>ChatMate</div>
+    <div class="typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
+  chat.appendChild(typing);
+  chat.scrollTop = chat.scrollHeight;
+}
+function removeTyping(){ const t=document.getElementById('typing'); if(t) t.remove(); }
+
+async function sendMessage(){
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  const pdfFile = pdfInput.files[0];
+
+  if(!text && !pdfFile) return;
+  if(text) addMessage(text,"user");
+  input.value = "";
+  pdfInput.value = "";
+
+  showTyping();
+
+  try{
+    let response;
+    if(pdfFile){
+      const formData = new FormData();
+      formData.append('pdf_file', pdfFile);
+      formData.append('message', text);
+      response = await fetch("/ask_pdf",{method:'POST',body: formData});
+    } else {
+      response = await fetch("/ask",{method:'POST',headers:{'Content-Type':'application/json'},body: JSON.stringify({message:text})});
+    }
+    const data = await response.json();
+    removeTyping();
+    let confidence = null;
+    const match = data.reply.match(/\(Confidence: ([0-9.]+)\)/);
+    let replyText = data.reply;
+    if(match){ confidence = parseFloat(match[1])/100; replyText = data.reply.replace(match[0],''); }
+    addMessage(replyText,"assistant",confidence);
+  } catch(err){ removeTyping(); addMessage("❌ Error connecting to server","assistant"); console.error("Fetch error:", err); }
+}
+
+document.getElementById('userInput').addEventListener("keypress", function(e){
+  if(e.key==="Enter"){ e.preventDefault(); sendMessage(); }
+});
+
+const themeToggleBtn = document.getElementById('themeToggle');
+if(localStorage.getItem('chatmateTheme')==='dark'){ document.body.classList.add('dark'); themeToggleBtn.textContent = "☀️ Light Mode"; }
+themeToggleBtn.addEventListener('click',()=>{
+  document.body.classList.toggle('dark');
+  if(document.body.classList.contains('dark')){ themeToggleBtn.textContent = "☀️ Light Mode"; localStorage.setItem('chatmateTheme','dark'); }
+  else { themeToggleBtn.textContent = "🌙 Dark Mode"; localStorage.setItem('chatmateTheme','light'); }
+});
+</script>
+</body>
+</html>
