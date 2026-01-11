@@ -53,7 +53,7 @@ Chat-Mate follows a client-server architecture:
 git clone https://github.com/your-username/chat-mate.git
 cd chat-mate
 pip install -r requirements.txt
-python app.py
+python server.py
 ```
 
 The application will run on:
