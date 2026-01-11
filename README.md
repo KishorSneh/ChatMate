@@ -90,7 +90,7 @@ Admins can access the dashboard to monitor system activity and manage content.
 - Kishor Sneh
 - Mansuri Saniya
 - Shah Rose
-Guided by: Ms. Happy Patel
+* Guided by: Ms. Happy Patel
 ### Department of Computer Science, Gujarat University
 
 ## License
