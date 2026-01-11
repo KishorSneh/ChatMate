@@ -49,17 +49,17 @@ Chat-Mate follows a client-server architecture:
 - pip package manager
 
 ### Steps
-'''
+```bash
 git clone https://github.com/your-username/chat-mate.git
 cd chat-mate
 pip install -r requirements.txt
 python app.py
-'''
+```
 
 The application will run on:
-'''
+```bash
 http://127.0.0.1:5000
-'''
+```
 
 ## Usage
 - Register or log in as a user
